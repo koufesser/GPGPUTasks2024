@@ -5,8 +5,7 @@
 #include <libutils/timer.h>
 
 #include "cl/sum_cl.h"
-
-#include <assert.h>
+#include <cassert>
 
 template<typename T>
 void raiseFail(const T &a, const T &b, std::string message, std::string filename, int line) {
@@ -21,7 +20,6 @@ void raiseFail(const T &a, const T &b, std::string message, std::string filename
 void run(gpu::Device &device, const std::string &kernelName, const unsigned int n, const unsigned int reference_sum,
          const unsigned int benchmarkingIters, const std::vector<unsigned int> &as) {
 
-    timer t;
     gpu::Context context;
     context.init(device.device_id_opencl);
     context.activate();
@@ -38,8 +36,8 @@ void run(gpu::Device &device, const std::string &kernelName, const unsigned int 
         kernel.compile(printLog);
         unsigned int workGroupSize = 64;
         unsigned int global_work_size = (n + workGroupSize - 1) / workGroupSize * workGroupSize;
-        timer t;
         unsigned int sum[1];
+        timer t;
         for (int i = 0; i < benchmarkingIters; ++i) {
             sum[0] = 0;
             sum_gpu.writeN(&sum[0],1);
@@ -49,10 +47,11 @@ void run(gpu::Device &device, const std::string &kernelName, const unsigned int 
             EXPECT_THE_SAME(reference_sum, sum[0], "GPU result should be consistent!");
             t.nextLap();
         }
+        std::cout << kernelName << std::endl;
+        std::cout << "GPU:     " << t.lapAvg() << "+-" << t.lapStd() << " s" << std::endl;
+        std::cout << "GPU:     " << (n / 1000.0 / 1000.0) / t.lapAvg() << " millions/s" << std::endl;
     }
-    std::cout << kernelName << " : " << t.elapsed() << " ms" << std::endl;
-    std::cout << "GPU:     " << t.lapAvg() << "+-" << t.lapStd() << " s" << std::endl;
-    std::cout << "GPU:     " << (n / 1000.0 / 1000.0) / t.lapAvg() << " millions/s" << std::endl;
+
 }
 
 int main(int argc, char **argv) {
