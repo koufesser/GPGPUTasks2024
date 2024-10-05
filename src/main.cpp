@@ -53,6 +53,7 @@ int main() {
         // Не забывайте проверять коды ошибок с помощью макроса OCL_SAFE_CALL
         size_t platformNameSize = 0;
         OCL_SAFE_CALL(clGetPlatformInfo(platform, CL_PLATFORM_NAME, 0, nullptr, &platformNameSize));
+        std::cout << "Platform name is ok" << std::endl;
         // Попробуйте вместо CL_PLATFORM_NAME передать какое-нибудь случайное число - например 239
         // Т.к. это некорректный идентификатор параметра платформы - то метод вернет код ошибки
         // Макрос OCL_SAFE_CALL заметит это, и кинет ошибку с кодом
@@ -71,7 +72,7 @@ int main() {
 
         // Запросите и напечатайте так же в консоль вендора данной платформы
         size_t platformVendorSize = 0;
-        OCL_SAFE_CALL(clGetPlatformInfo(platform, CL_PLATFORM_NAME, 0, nullptr, &platformVendorSize));
+        OCL_SAFE_CALL(clGetPlatformInfo(platform, CL_PLATFORM_VENDOR, 0, nullptr, &platformVendorSize));
 
         std::vector<unsigned char> platformVendor(platformVendorSize, 0);
         OCL_SAFE_CALL(clGetPlatformInfo(platform, CL_PLATFORM_VENDOR, platformVendorSize, platformVendor.data(), nullptr));
@@ -100,10 +101,10 @@ int main() {
             std::cout << "    Device type: " << deviseType.data() << std::endl;
             cl_ulong gl_mem_size = 0;
             OCL_SAFE_CALL(clGetDeviceInfo(devices[deviceIndex], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &gl_mem_size, nullptr));
-            std::cout << "   Global mem size: " << gl_mem_size << std::endl;
+            std::cout << "   Global mem size: " << gl_mem_size / 1024 / 1024 << " Mb" << std::endl;
             cl_ulong local_mem_size = 0;
-            OCL_SAFE_CALL(clGetDeviceInfo(devices[deviceIndex], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cl_ulong), &local_mem_size, nullptr));
-            std::cout << "    Local mem size: " << local_mem_size << std::endl;
+            OCL_SAFE_CALL(clGetDeviceInfo(devices[deviceIndex], CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &local_mem_size, nullptr));
+            std::cout << "    Local mem size: " << local_mem_size / 1024 / 1024 << " Mb" << std::endl;
             cl_ulong max_clock_frequency = 0;
             OCL_SAFE_CALL(clGetDeviceInfo(devices[deviceIndex], CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(cl_ulong), &max_clock_frequency, nullptr));
             std::cout << "    Max clock frequency: " << max_clock_frequency << std::endl;
