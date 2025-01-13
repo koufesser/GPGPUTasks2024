@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <vector>
 
+const int WORK_GROUP_SIZE = 128;
 const int benchmarkingIters = 10;
 const int benchmarkingItersCPU = 1;
 const unsigned int n = 32 * 1024 * 1024;
@@ -58,9 +59,6 @@ int main(int argc, char **argv) {
 
     const std::vector<int> cpu_sorted = computeCPU(as);
 
-    // remove me
-    return 0;
-
     gpu::gpu_mem_32i as_gpu;
     as_gpu.resizeN(n);
 
@@ -73,8 +71,13 @@ int main(int argc, char **argv) {
             as_gpu.writeN(as.data(), n);
             t.restart();// Запускаем секундомер после прогрузки данных, чтобы замерять время работы кернела, а не трансфер данных
 
-            /*TODO*/
+            gpu::WorkSize ws(WORK_GROUP_SIZE, n);
 
+            for (uint32_t size = 1; size <= n / 2; size *= 2) {
+                for (uint32_t decreasing = size; decreasing >= 1; decreasing /= 2) {
+                    bitonic.exec(ws, as_gpu, size, decreasing);
+                }
+            }
             t.nextLap();
         }
 
