@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
             as_gpu.writeN(as.data(), n);
             t.restart();// Запускаем секундомер после прогрузки данных, чтобы замерять время работы кернела, а не трансфер данных
 
-            gpu::WorkSize ws(WORK_GROUP_SIZE, n);
+            gpu::WorkSize ws(WORK_GROUP_SIZE, n / 2);
 
             for (uint32_t size = 1; size <= n / 2; size *= 2) {
                 for (uint32_t decreasing = size; decreasing >= 1; decreasing /= 2) {
