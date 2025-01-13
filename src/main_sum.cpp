@@ -18,7 +18,7 @@ void raiseFail(const T &a, const T &b, std::string message, std::string filename
 #define EXPECT_THE_SAME(a, b, message) raiseFail(a, b, message, __FILE__, __LINE__)
 
 void run(gpu::Device &device, const std::string &kernelName, const unsigned int n, const unsigned int reference_sum,
-         const unsigned int benchmarkingIters, const std::vector<unsigned int> &as) {
+         const unsigned int benchmarkingIters, const std::vector<unsigned int> &as, gpu::WorkSize ws) {
 
     gpu::Context context;
     context.init(device.device_id_opencl);
@@ -34,14 +34,12 @@ void run(gpu::Device &device, const std::string &kernelName, const unsigned int 
         ocl::Kernel kernel(sum_kernel, sum_kernel_length, kernelName);
         bool printLog = false;
         kernel.compile(printLog);
-        unsigned int workGroupSize = 64;
-        unsigned int global_work_size = (n + workGroupSize - 1) / workGroupSize * workGroupSize;
         unsigned int sum[1];
         timer t;
         for (int i = 0; i < benchmarkingIters; ++i) {
             sum[0] = 0;
             sum_gpu.writeN(&sum[0],1);
-            kernel.exec(gpu::WorkSize(workGroupSize, global_work_size),
+            kernel.exec(ws,
                 as_gpu, sum_gpu, n);
             sum_gpu.readN(sum, 1);
             EXPECT_THE_SAME(reference_sum, sum[0], "GPU result should be consistent!");
@@ -96,12 +94,15 @@ int main(int argc, char **argv) {
     }
 
     {
+        const unsigned int workGroupSize = 64;
+        const unsigned int valuesPerWorkItem = 32;
+        const unsigned int workItems = (n + workGroupSize - 1) / workGroupSize * workGroupSize;
         // TODO: implement on OpenCL
         gpu::Device device = gpu::chooseGPUDevice(argc, argv);
-        run(device, "atomic_sum", n, reference_sum, benchmarkingIters, as);
-        run(device, "cycle_sum", n, reference_sum, benchmarkingIters, as);
-        run(device, "cycle_coalesced_sum", n, reference_sum, benchmarkingIters, as);
-        run(device, "local_mem_sum", n, reference_sum, benchmarkingIters, as);
-        run(device, "tree_sum", n, reference_sum, benchmarkingIters, as);
+        run(device, "atomic_sum", n, reference_sum, benchmarkingIters, as, gpu::WorkSize(workGroupSize, workItems));
+        run(device, "cycle_sum", n, reference_sum, benchmarkingIters, as, gpu::WorkSize(workGroupSize, workItems / valuesPerWorkItem));
+        run(device, "cycle_coalesced_sum", n, reference_sum, benchmarkingIters, as, gpu::WorkSize(workGroupSize, workItems / valuesPerWorkItem));
+        run(device, "local_mem_sum", n, reference_sum, benchmarkingIters, as, gpu::WorkSize(workGroupSize, workItems));
+        run(device, "tree_sum", n, reference_sum, benchmarkingIters, as, gpu::WorkSize(workGroupSize, workItems));
     }
 }
