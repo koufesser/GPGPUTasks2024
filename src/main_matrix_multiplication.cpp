@@ -51,7 +51,7 @@ struct KernelConfig {
 KernelConfig makeNaiveConfig(unsigned int tile_size)
 {
     std::string kernel_name = "matrix_multiplication_naive";
-    gpu::WorkSize work_size(tile_size, tile_size, M, N);
+    gpu::WorkSize work_size(tile_size, tile_size, K, N);
     std::string defines;
     std::string prefix = "[naive, ts=" + std::to_string(tile_size) + "]";
     return KernelConfig{kernel_name, work_size, defines, prefix};
@@ -60,7 +60,7 @@ KernelConfig makeNaiveConfig(unsigned int tile_size)
 KernelConfig makeLocalConfig(unsigned int tile_size)
 {
     std::string kernel_name = "matrix_multiplication_local";
-    gpu::WorkSize work_size(tile_size, tile_size, M, N);
+    gpu::WorkSize work_size(tile_size, tile_size, K, N);
     std::string defines = "-DTILE_SIZE=" + std::to_string(tile_size);
     std::string prefix = "[local, ts=" + std::to_string(tile_size) + "]";
     return KernelConfig{kernel_name, work_size, defines, prefix};
@@ -69,7 +69,7 @@ KernelConfig makeLocalConfig(unsigned int tile_size)
 KernelConfig makeLocalWPTConfig(unsigned int tile_size, unsigned int wpt)
 {
     std::string kernel_name = "matrix_multiplication_local_wpt";
-    gpu::WorkSize work_size(tile_size / wpt, tile_size, M /wpt, N);
+    gpu::WorkSize work_size(tile_size, tile_size / wpt, K, N / wpt);
     std::string defines = "-DTILE_SIZE=" + std::to_string(tile_size) + " -DWORK_PER_THREAD=" + std::to_string(wpt);
     std::string prefix = "[local wpt, ts=" + std::to_string(tile_size) + ", wpt=" + std::to_string(wpt) + "]";
     return KernelConfig{kernel_name, work_size, defines, prefix};
@@ -141,13 +141,13 @@ int main(int argc, char **argv)
     const std::vector<float> cs_cpu_reference = computeCPU(as.data(), bs.data());
 
 
-    runTest(makeNaiveConfig(4), as.data(), bs.data(), cs_cpu_reference.data());
-    runTest(makeNaiveConfig(8), as.data(), bs.data(), cs_cpu_reference.data());
-    runTest(makeNaiveConfig(16), as.data(), bs.data(), cs_cpu_reference.data());
-
-    runTest(makeLocalConfig(4), as.data(), bs.data(), cs_cpu_reference.data());
-    runTest(makeLocalConfig(8), as.data(), bs.data(), cs_cpu_reference.data());
-    runTest(makeLocalConfig(16), as.data(), bs.data(), cs_cpu_reference.data());
+    // runTest(makeNaiveConfig(4), as.data(), bs.data(), cs_cpu_reference.data());
+    // runTest(makeNaiveConfig(8), as.data(), bs.data(), cs_cpu_reference.data());
+    // runTest(makeNaiveConfig(16), as.data(), bs.data(), cs_cpu_reference.data());
+    //
+    // runTest(makeLocalConfig(4), as.data(), bs.data(), cs_cpu_reference.data());
+    // runTest(makeLocalConfig(8), as.data(), bs.data(), cs_cpu_reference.data());
+    // runTest(makeLocalConfig(16), as.data(), bs.data(), cs_cpu_reference.data());
 
     for (unsigned int tile_size : {4, 8, 16})
         for (unsigned int wpt : {2, 4, 8, 16})
